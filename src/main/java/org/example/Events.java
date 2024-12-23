@@ -17,18 +17,34 @@ public class Events {
     private String round;
     private String time;
 
+    public String getFighter1() {
+        // If no comma is present, return the entire fighter string
+        if (!fighter.contains(",")) {
+            return fighter;
+        }
+        return fighter.split(",")[0];
+    }
+
+    public String getFighter2() {
+        // If no comma is present, return an empty string
+        if (!fighter.contains(",")) {
+            return "";
+        }
+        return fighter.split(",")[1];
+    }
+
     @Override
     public String toString() {
-        return "{\"win_loss\":\"" + win_loss +
-                "\", \"fighter\":\"" + fighter +
-                "\", \"kd\":\"" + kd +
-                "\", \"str\":\"" + str +
-                "\", \"td\":\"" + td +
-                "\", \"sub\":\"" + sub +
-                "\", \"weight_class\":\"" + weight_class +
-                "\", \"method\":\"" + method +
-                "\", \"round\":\"" + round +
-                "\", \"time\":\"" + time +
+        return "{\"Win/Loss\":\"" + win_loss +
+                "\", \"Fighters\":\"" + fighter +
+                "\", \"KD\":\"" + kd +
+                "\", \"STR\":\"" + str +
+                "\", \"TD\":\"" + td +
+                "\", \"SUB\":\"" + sub +
+                "\", \"Weight Class\":\"" + weight_class +
+                "\", \"Method\":\"" + method +
+                "\", \"Round\":\"" + round +
+                "\", \"Time\":\"" + time +
                 "\"}";
     }
 }

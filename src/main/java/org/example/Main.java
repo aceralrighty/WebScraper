@@ -1,20 +1,8 @@
 package org.example;
-
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.jsoup.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.openqa.selenium.By;
-import org.openqa.selenium.PageLoadStrategy;
-import org.openqa.selenium.WebDriver;
-
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.safari.SafariDriver;
-import org.openqa.selenium.safari.SafariOptions;
-
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -26,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+
 public class Main {
     public static void scrapeUFCFights(List<Events> events, Set<String> pagesDiscovered, List<String> pagesToScrape) {
 
@@ -35,37 +24,54 @@ public class Main {
 
             Document doc;
             try {
-                doc = Jsoup.connect("http://www.ufcstats.com/statistics/events/completed")
+                doc = Jsoup.connect("http://www.ufcstats.com/event-details/72c9c2eadfc3277e")
                         .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36").get();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            Elements rows = doc.selectXpath("/html/body/section/div/div/div/div[2]/div/table/tbody/tr[1]");
-            for (Element fight : rows) {
+            Element table = doc.select("table").getFirst();
+            Element tbody = table.select("tbody").first();
+            Elements headerRows = table.select("tr").get(0).select("th, td");
+            List<String> headers = new ArrayList<String>();
+            for (Element header : headerRows) {
+                headers.add(header.text());
+            }
+
+            Elements rows = tbody.select("tr");
+            for (Element row : rows) {
                 Events event = new Events();
 
+                event.setWin_loss(row.select("td:nth-child(1)").text());
+                Elements fighterElements = row.select("td:nth-child(2) p a");
+                StringBuilder fighters = new StringBuilder();
 
-                event.setWin_loss(fight.selectXpath("/html/body/section/div/div/table/tbody/tr[1]/td[1]").attr("td"));
-                event.setFighter(fight.selectXpath("/html/body/section/div/div/table/tbody/tr[1]/td[2]").attr("td"));
-                event.setKd(fight.selectXpath("/html/body/section/div/div/table/tbody/tr[1]/td[3]").attr("td"));
-                event.setStr(fight.selectXpath("/html/body/section/div/div/table/tbody/tr[1]/td[4]").attr("td"));
-                event.setTd(fight.selectXpath("/html/body/section/div/div/table/tbody/tr[1]/td[5]").attr("td"));
-                event.setSub(fight.selectXpath("/html/body/section/div/div/table/tbody/tr[1]/td[6]").attr("td"));
-                event.setWeight_class(fight.selectXpath("/html/body/section/div/div/table/tbody/tr[1]/td[7]").attr("td"));
-                event.setMethod(fight.selectXpath("/html/body/section/div/div/table/tbody/tr[1]/td[8]").attr("td"));
-                event.setRound(fight.selectXpath("/html/body/section/div/div/table/tbody/tr[1]/td[9]").attr("td"));
-                event.setTime(fight.selectXpath("/html/body/section/div/div/table/tbody/tr[1]/td[10]").attr("td"));
+                for (Element fighterElement : fighterElements) {
+                    String fighterName = fighterElement.text().trim();
+                    if (!fighters.isEmpty()) {
+                        fighters.append("\n"); // Add a newline between fighters
+                    }
+                    fighters.append(fighterName);
+                }
+                event.setFighter(fighters.toString());
+                event.setKd(row.select("td:nth-child(3)").text());
+                event.setStr(row.select("td:nth-child(4)").text());
+                event.setTd(row.select("td:nth-child(5)").text());
+                event.setSub(row.select("td:nth-child(6)").text());
+                event.setWeight_class(row.select("td:nth-child(7)").text());
+                event.setMethod(row.select("td:nth-child(8)").text());
+                event.setRound(row.select("td:nth-child(9)").text());
+                event.setTime(row.select("td:nth-child(10)").text());
                 events.add(event);
             }
-            Elements paginations = doc.selectXpath("/html/body/section/div/div/div/div[2]/div/table/tbody/tr[2]/td[1]/i/a");
 
+            Elements paginations = doc.select("a[href]");
             for (Element pagination : paginations) {
                 String pageUrl = pagination.attr("href");
                 if (!pagesDiscovered.contains(pageUrl) && !pagesToScrape.contains(pageUrl)) {
                     pagesToScrape.add(pageUrl);
                 }
-                pagesDiscovered.add(pageUrl);
             }
+
             System.out.println(url + " -> page scraped");
         }
     }
@@ -99,61 +105,30 @@ public class Main {
         executorService.awaitTermination(300, TimeUnit.SECONDS);
         System.out.println(events.size() + " events scraped");
 
-//        Document doc = Jsoup.connect("http://www.ufcstats.com/statistics/events/completed")
-//                .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36").get();
-//        List<Events> events = new ArrayList<>();
-//        Elements fighterElements = doc.select("body > section > div > div > table > tbody");
-//
-//        Elements rows = doc.select("tr.b-statistics__table-row_type_first");
-//
-//        for (Element row : rows) {
-//            Element link = row.selectFirst("a.b-link_style_white");
-//            if (link != null) {
-//                String url = link.attr("href");
-//                Document eventDoc = Jsoup.connect(url).get();
-//            }
-//            Elements fights = doc.select("tbody > tr > td");
-//            for (Element fight : fights) {
-//                Events event = new Events();
-//
-//                event.setWin_loss(fight.selectFirst("a.b-flag.b-flag_style_green .b-flag__text").text());
-//                event.setFighter(fight.selectFirst("a.b-link.b-link_style_black").text());
-//                event.setKd(fight.selectFirst("td.b-fight-details__table-col p.b-fight-details__table-text").text());
-//                event.setStr(fight.selectFirst("body > section > div > div > table > tbody > tr:nth-child(1) > td:nth-child(4)").text());
-//                event.setTd(fight.selectFirst("body > section > div > div > table > tbody > tr:nth-child(1) > td:nth-child(5)").text());
-//                event.setSub(fight.selectFirst("body > section > div > div > table > tbody > tr:nth-child(1) > td:nth-child(6)").text());
-//                event.setWeight_class(fight.selectFirst("body > section > div > div > table > tbody > tr:nth-child(1) > td:nth-child(7)").text());
-//                event.setMethod(fight.selectFirst("body > section > div > div > table > tbody > tr:nth-child(1) > td:nth-child(8)").text());
-//                event.setRound(fight.selectFirst("body > section > div > div > table > tbody > tr:nth-child(1) > td:nth-child(9)").text());
-//                event.setTime(fight.selectFirst("body > section > div > div > table > tbody > tr:nth-child(1) > td:nth-child(10)").text());
-//                events.add(event);
-//            }
-//        }
-//        System.out.println(doc + " -> pages scraped " + events.size() + " events");
-
 
         File csvFile = new File("Events.csv");
         try (PrintWriter pw = new PrintWriter(csvFile)) {
             for (Events event : events) {
-                List<String> row = getStrings(event);
-                pw.println(String.join(",", row));
+                Map<String, String> row = getStrings(event);
+                List<String> values = new ArrayList<>(row.values());
+                pw.println(String.join(",", values));
             }
-
         }
     }
 
-    private static List<String> getStrings(Events event) {
-        List<String> row = new ArrayList<>();
-        row.add("\"" + event.getWin_loss());
-        row.add("\"" + event.getFighter());
-        row.add("\"" + event.getKd());
-        row.add("\"" + event.getStr());
-        row.add("\"" + event.getTd());
-        row.add("\"" + event.getSub());
-        row.add("\"" + event.getWeight_class());
-        row.add("\"" + event.getMethod());
-        row.add("\"" + event.getRound());
-        row.add("\"" + event.getTime());
+    private static Map<String, String> getStrings(Events event) {
+        Map<String, String> row = new LinkedHashMap<>();
+        row.put("win_loss", event.getWin_loss());
+        row.put("fighter1", event.getFighter1());
+        row.put("fighter2", event.getFighter2());
+        row.put("kd", event.getKd());
+        row.put("str", event.getStr());
+        row.put("td", event.getTd());
+        row.put("sub", event.getSub());
+        row.put("weight_class", event.getWeight_class());
+        row.put("method", event.getMethod());
+        row.put("round", event.getRound());
+        row.put("time", event.getTime());
         return row;
     }
 
