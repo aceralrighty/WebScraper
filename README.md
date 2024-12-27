@@ -13,7 +13,7 @@ This project aims to scrape data from the UFC stats page and parse the informati
 1. Clone this repository:
 
     ```bash
-    git clone https://github.com/yourusername/ufc-stats-scraper.git
+    git clone https://github.com/yourusername/WebScraper.git
     ```
 
 ## TODO
