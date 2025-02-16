@@ -32,7 +32,7 @@ public class Main {
             Element table = doc.select("table").getFirst();
             Element tbody = table.select("tbody").first();
             Elements headerRows = table.select("tr").get(0).select("th, td");
-            List<String> headers = new ArrayList<String>();
+            List<String> headers = new ArrayList<>();
             for (Element header : headerRows) {
                 headers.add(header.text());
             }
@@ -93,7 +93,7 @@ public class Main {
 
         int i = 1;
 
-        int limit = 12;
+        int limit = 1;
 
         while (!pagesToScrape.isEmpty() && i < limit) {
             executorService.execute(() -> scrapeUFCFights(events, pagesDiscovered, pagesToScrape));
@@ -103,7 +103,7 @@ public class Main {
         }
         executorService.shutdown();
         executorService.awaitTermination(300, TimeUnit.SECONDS);
-        System.out.println(events.size() + " events scraped");
+        System.out.println(events.size() + " fights scraped");
 
 
         File csvFile = new File("Events.csv");
